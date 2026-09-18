@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>PARTY 2026 Check-In</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    #reader {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 10px;
+      border-radius: 15px;
+    }
+
+    #result {
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 15px;
+      background: white;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .success {
+      color: #16803c;
+    }
+
+    .warning {
+      color: #b77900;
+    }
+
+    .error {
+      color: #c62828;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🎉 PARTY 2026</h1>
+  <div class="subtitle">Guest Check-In</div>
+
+  <div id="reader"></div>
+
+  <div id="result">
+    📷 Scan a Guest QR Code
+  </div>
+
+  <script>
+
+    // ==================================================
+    // IMPORTANT:
+    // Replace this URL later with your Apps Script
+    // Web App URL.
+    // ==================================================
+
+    const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+
+    let processing = false;
+
+
+    function showResult(message, className) {
+
+      const result =
+        document.getElementById("result");
+
+      result.className = className;
+      result.innerHTML = message;
+
+    }
+
+
+    async function onScanSuccess(decodedText) {
+
+      if (processing) return;
+
+      processing = true;
+
+      showResult(
+        "⏳ Checking guest...",
+        ""
+      );
+
+
+      try {
+
+        const url =
+          APPS_SCRIPT_URL +
+          "?guestId=" +
+          encodeURIComponent(decodedText);
+
+
+        const response =
+          await fetch(url);
+
+
+        const data =
+          await response.json();
+
+
+        if (data.success) {
+
+          showResult(
+
+            "✅ CHECK-IN SUCCESSFUL<br><br>" +
+
+            data.name +
+
+            "<br><br>" +
+
+            data.guestId,
+
+            "success"
+
+          );
+
+
+        } else if (data.alreadyCheckedIn) {
+
+          showResult(
+
+            "⚠️ ALREADY CHECKED IN<br><br>" +
+
+            data.name +
+
+            "<br><br>" +
+
+            data.guestId,
+
+            "warning"
+
+          );
+
+
+        } else {
+
+          showResult(
+
+            "❌ GUEST NOT FOUND<br><br>" +
+
+            data.guestId,
+
+            "error"
+
+          );
+
+        }
+
+
+      } catch (error) {
+
+        showResult(
+
+          "❌ CONNECTION ERROR<br><br>" +
+
+          error.message,
+
+          "error"
+
+        );
+
+      }
+
+
+      setTimeout(function() {
+
+        processing = false;
+
+        showResult(
+          "📷 Ready for next guest",
+          ""
+        );
+
+      }, 3000);
+
+    }
+
+
+    const scanner =
+      new Html5QrcodeScanner(
+
+        "reader",
+
+        {
+          fps: 10,
+          qrbox: 250
+        }
+
+      );
+
+
+    scanner.render(onScanSuccess);
+
+  </script>
+
+</body>
+</html>
