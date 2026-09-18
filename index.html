@@ -105,69 +105,88 @@
       );
 
 
-      try {
+  try {
 
-        const url =
-          APPS_SCRIPT_URL +
-          "?guestId=" +
-          encodeURIComponent(decodedText);
+  const callbackName =
+    "checkInCallback_" + Date.now();
+
+  window[callbackName] = function(data) {
+
+    delete window[callbackName];
+
+    if (data.success) {
+
+      showResult(
+        "✅ CHECK-IN SUCCESSFUL<br><br>" +
+        data.name +
+        "<br><br>" +
+        data.guestId,
+        "success"
+      );
+
+    } else if (data.alreadyCheckedIn) {
+
+      showResult(
+        "⚠️ ALREADY CHECKED IN<br><br>" +
+        data.name +
+        "<br><br>" +
+        data.guestId,
+        "warning"
+      );
+
+    } else {
+
+      showResult(
+        "❌ GUEST NOT FOUND<br><br>" +
+        (data.guestId || ""),
+        "error"
+      );
+
+    }
+
+    setTimeout(function() {
+
+      processing = false;
+
+      showResult(
+        "📷 Ready for next guest",
+        ""
+      );
+
+    }, 3000);
+
+  };
 
 
-        const response =
-          await fetch(url);
+  const script =
+    document.createElement("script");
+
+  script.src =
+    APPS_SCRIPT_URL +
+    "?guestId=" +
+    encodeURIComponent(decodedText) +
+    "&callback=" +
+    callbackName;
 
 
-        const data =
-          await response.json();
+  script.onerror = function() {
+
+    delete window[callbackName];
+
+    showResult(
+      "❌ CONNECTION ERROR",
+      "error"
+    );
+
+    processing = false;
+
+  };
 
 
-        if (data.success) {
-
-          showResult(
-
-            "✅ CHECK-IN SUCCESSFUL<br><br>" +
-
-            data.name +
-
-            "<br><br>" +
-
-            data.guestId,
-
-            "success"
-
-          );
+  document.body.appendChild(script);
 
 
-        } else if (data.alreadyCheckedIn) {
-
-          showResult(
-
-            "⚠️ ALREADY CHECKED IN<br><br>" +
-
-            data.name +
-
-            "<br><br>" +
-
-            data.guestId,
-
-            "warning"
-
-          );
-
-
-        } else {
-
-          showResult(
-
-            "❌ GUEST NOT FOUND<br><br>" +
-
-            data.guestId,
-
-            "error"
-
-          );
-
-        }
+} 
 
 
       } catch (error) {
