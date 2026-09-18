@@ -6,7 +6,7 @@
 
   <title>PARTY 2026 Check-In</title>
 
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
     body {
@@ -60,7 +60,10 @@
 <body>
 
   <h1>🎉 PARTY 2026</h1>
-  <div class="subtitle">Guest Check-In</div>
+
+  <div class="subtitle">
+    Guest Check-In
+  </div>
 
   <div id="reader"></div>
 
@@ -68,19 +71,23 @@
     📷 Scan a Guest QR Code
   </div>
 
+
   <script>
 
     // ==================================================
-    // IMPORTANT:
-    // Replace this URL later with your Apps Script
-    // Web App URL.
+    // APPS SCRIPT WEB APP URL
     // ==================================================
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywuvglBSw5mJfwxcsZQi-gTkJWsk-L5AOKl2hUBvqTB1baSmFsTfYufOI8oGNx4Wcm/exec";
+    const APPS_SCRIPT_URL =
+      "https://script.google.com/macros/s/AKfycbywuvglBSw5mJfwxcsZQi-gTkJWsk-L5AOKl2hUBvqTB1baSmFsTfYufOI8oGNx4Wcm/exec";
 
 
     let processing = false;
 
+
+    // ==================================================
+    // SHOW RESULT
+    // ==================================================
 
     function showResult(message, className) {
 
@@ -88,16 +95,22 @@
         document.getElementById("result");
 
       result.className = className;
+
       result.innerHTML = message;
 
     }
 
 
-    async function onScanSuccess(decodedText) {
+    // ==================================================
+    // WHEN QR CODE IS SCANNED
+    // ==================================================
+
+    function onScanSuccess(decodedText) {
 
       if (processing) return;
 
       processing = true;
+
 
       showResult(
         "⏳ Checking guest...",
@@ -105,118 +118,127 @@
       );
 
 
-  try {
-
-  const callbackName =
-    "checkInCallback_" + Date.now();
-
-  window[callbackName] = function(data) {
-
-    delete window[callbackName];
-
-    if (data.success) {
-
-      showResult(
-        "✅ CHECK-IN SUCCESSFUL<br><br>" +
-        data.name +
-        "<br><br>" +
-        data.guestId,
-        "success"
-      );
-
-    } else if (data.alreadyCheckedIn) {
-
-      showResult(
-        "⚠️ ALREADY CHECKED IN<br><br>" +
-        data.name +
-        "<br><br>" +
-        data.guestId,
-        "warning"
-      );
-
-    } else {
-
-      showResult(
-        "❌ GUEST NOT FOUND<br><br>" +
-        (data.guestId || ""),
-        "error"
-      );
-
-    }
-
-    setTimeout(function() {
-
-      processing = false;
-
-      showResult(
-        "📷 Ready for next guest",
-        ""
-      );
-
-    }, 3000);
-
-  };
+      // Create unique callback name
+      const callbackName =
+        "checkInCallback_" + Date.now();
 
 
-  const script =
-    document.createElement("script");
+      // Receive response from Apps Script
+      window[callbackName] = function(data) {
 
-  script.src =
-    APPS_SCRIPT_URL +
-    "?guestId=" +
-    encodeURIComponent(decodedText) +
-    "&callback=" +
-    callbackName;
+        delete window[callbackName];
 
 
-  script.onerror = function() {
+        // SUCCESS
+        if (data.success) {
 
-    delete window[callbackName];
+          showResult(
 
-    showResult(
-      "❌ CONNECTION ERROR",
-      "error"
-    );
+            "✅ CHECK-IN SUCCESSFUL<br><br>" +
 
-    processing = false;
+            data.name +
 
-  };
+            "<br><br>" +
+
+            data.guestId,
+
+            "success"
+
+          );
+
+        }
 
 
-  document.body.appendChild(script);
+        // ALREADY CHECKED IN
+        else if (data.alreadyCheckedIn) {
+
+          showResult(
+
+            "⚠️ ALREADY CHECKED IN<br><br>" +
+
+            data.name +
+
+            "<br><br>" +
+
+            data.guestId,
+
+            "warning"
+
+          );
+
+        }
 
 
-} 
+        // GUEST NOT FOUND
+        else {
+
+          showResult(
+
+            "❌ GUEST NOT FOUND<br><br>" +
+
+            (data.guestId || ""),
+
+            "error"
+
+          );
+
+        }
 
 
-      } catch (error) {
+        // Ready for next guest
+        setTimeout(function() {
+
+          processing = false;
+
+          showResult(
+            "📷 Ready for next guest",
+            ""
+          );
+
+        }, 3000);
+
+      };
+
+
+      // ==================================================
+      // SEND GUEST ID TO APPS SCRIPT
+      // ==================================================
+
+      const script =
+        document.createElement("script");
+
+
+      script.src =
+        APPS_SCRIPT_URL +
+        "?guestId=" +
+        encodeURIComponent(decodedText) +
+        "&callback=" +
+        callbackName;
+
+
+      // Connection error
+      script.onerror = function() {
+
+        delete window[callbackName];
 
         showResult(
-
-          "❌ CONNECTION ERROR<br><br>" +
-
-          error.message,
-
+          "❌ CONNECTION ERROR",
           "error"
-
         );
-
-      }
-
-
-      setTimeout(function() {
 
         processing = false;
 
-        showResult(
-          "📷 Ready for next guest",
-          ""
-        );
+      };
 
-      }, 3000);
+
+      document.body.appendChild(script);
 
     }
 
+
+    // ==================================================
+    // START QR SCANNER
+    // ==================================================
 
     const scanner =
       new Html5QrcodeScanner(
@@ -232,6 +254,7 @@
 
 
     scanner.render(onScanSuccess);
+
 
   </script>
 
